@@ -1,7 +1,9 @@
 ﻿using GG2server.data;
 using GG2server.logic;
 using GG2server.logic.data;
+using Ionic.Zlib;
 using System;
+using System.IO;
 using System.Threading;
 
 namespace GG2server {
@@ -9,10 +11,11 @@ namespace GG2server {
         public static byte[] protocolUuid;
         public static byte[] gg2lobbyId;
         private static Server server;
+        private static Config config;
 
         static void Main(string[] args) {
-            Config c = Config.ConfigFactory();
-
+            config = Config.ConfigFactory();
+            
             // parse the protocol version UUID for later use
             protocolUuid = NetworkHelper.ParseUuid(Constants.PROTOCOL_UUID);
             gg2lobbyId = NetworkHelper.ParseUuid(Constants.GG2_LOBBY_UUID);
@@ -29,6 +32,12 @@ namespace GG2server {
         public static Server Server {
             get {
                 return server;
+            }
+        }
+
+        public static Config Config {
+            get {
+                return config;
             }
         }
     }

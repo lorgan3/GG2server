@@ -3,18 +3,53 @@ using GG2server.logic.data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace GG2server.data {
     [Serializable]
     public class Config {
-        private List<KeyValue> config;
+        public List<KeyValue> config;
 
         // For serialisation
         private Config() {
             config = new List<KeyValue>();
-            config.Add(new KeyValue("Settings", new List<KeyValue>()));
-            config.Add(new KeyValue("Server", new List<KeyValue>()));
+        }
+
+        /// <summary>
+        /// Reads a config value.
+        /// </summary>
+        /// <param name="section">The section it's saved under.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="def">Default value if this key wasn't defined before.</param>
+        /// <returns>The data read from the config file.</returns>
+        public object ReadConfig(string section, string key, object def) {
+            List<KeyValue> list = (List<KeyValue>)this.config.Find(kv => kv.Key == section).Value;
+            if (list != null) {
+                object obj = list.Find(kv => kv.Key == key).Value;
+                if (obj != null) return obj;
+            }
+            return def;
+        }
+
+        /// <summary>
+        /// Writes a config value.
+        /// </summary>
+        /// <param name="section">The section it has to be saved under.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The data that should be written to the config file.</param>
+        public void WriteConfig(string section, string key, object value) {
+            List<KeyValue> list = (List<KeyValue>)this.config.Find(kv => kv.Key == section).Value;
+            if (list == null) {
+                list = new List<KeyValue>();
+                this.config.Add(new KeyValue(section, list));
+            }
+            KeyValue old = list.Find(kv => kv.Key == key);
+            if (old.Key == null) {
+                old.Key = key;
+                old.Value = value;
+                list.Add(old);
+            } else old.Value = value;
         }
            
         /// <summary>
@@ -40,30 +75,12 @@ namespace GG2server.data {
             try {
                 XmlSerializer s = new XmlSerializer(typeof(Config));
                 using (FileStream fs = new FileStream("gg2.xml", FileMode.Create, FileAccess.Write)) {
-                    s.Serialize(fs, this);
+                    using (XmlWriter xw = XmlWriter.Create(fs, new XmlWriterSettings { Indent = true, NewLineOnAttributes = false })) {
+                        s.Serialize(xw, this);
+                    }
                 }
             } catch (Exception ex) {
                 LogHelper.Log(ex.ToString(), LogLevel.warning);
-            }
-        }
-
-        public List<KeyValue> Settings {
-            get {
-                return (List<KeyValue>)this.config.Find(kv => kv.Key == "Settings").Value;
-            }
-            set {
-                this.config.Remove(this.config.Find(kv => kv.Key == "Settings"));
-                this.config.Add(new KeyValue("Settings", value));
-            }
-        }
-
-        public List<KeyValue> Server {
-            get {
-                return (List<KeyValue>)this.config.Find(kv => kv.Key == "Server").Value;
-            }
-            set {
-                this.config.Remove(this.config.Find(kv => kv.Key == "Server"));
-                this.config.Add(new KeyValue("Server", value));
             }
         }
     }
