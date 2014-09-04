@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ionic.Zlib, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Ionic.Zlib.dll</HintPath>
+    </Reference>
     <Reference Include="Open.Nat">
       <HintPath>packages\Open.Nat.2.0.9.0\lib\net45\Open.Nat.dll</HintPath>
     </Reference>
@@ -48,11 +52,15 @@
     <Compile Include="logic\data\Constants.cs" />
     <Compile Include="logic\data\Enums.cs" />
     <Compile Include="logic\data\Exceptions.cs" />
+    <Compile Include="logic\data\Extensions.cs" />
     <Compile Include="logic\data\KeyValue.cs" />
     <Compile Include="logic\LogHelper.cs" />
+    <Compile Include="logic\MapHelper.cs" />
     <Compile Include="logic\NetworkHelper.cs" />
     <Compile Include="logic\Server.cs" />
     <Compile Include="GG2server.cs" />
+    <Compile Include="objects\Character.cs" />
+    <Compile Include="objects\IEntity.cs" />
     <Compile Include="objects\JoiningPlayer.cs" />
     <Compile Include="objects\Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

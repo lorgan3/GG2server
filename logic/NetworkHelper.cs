@@ -1,6 +1,7 @@
 ﻿using GG2server.logic.data;
 using Open.Nat;
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -54,7 +55,7 @@ namespace GG2server.logic {
             return bytes;
         }
         public static byte[] GetBytes(string x) {
-            return System.Text.Encoding.ASCII.GetBytes(x);
+            return Encoding.ASCII.GetBytes(x);
         }
         public static string GetString(byte[] buffer) {
             return Encoding.ASCII.GetString(buffer);
@@ -65,8 +66,12 @@ namespace GG2server.logic {
         /// </summary>
         public static long GetLong(byte[] buffer) {
             if (BitConverter.IsLittleEndian) Array.Reverse(buffer);
-            Console.WriteLine((byte)buffer[0] + " - " + (byte)buffer[1] + " - " + (byte)buffer[2] + " - " + (byte)buffer[3]);
             return BitConverter.ToInt32(buffer, 0);
+        }
+
+        public static ushort GetShort(byte[] buffer) {
+            if (BitConverter.IsLittleEndian) Array.Reverse(buffer);
+            return BitConverter.ToUInt16(buffer, 0);
         }
 
         /// <summary>
@@ -94,6 +99,25 @@ namespace GG2server.logic {
             valueBytes.CopyTo(bytes, 3 + keyBytes.Length);
 
             return bytes;
+        }
+
+        /// <summary>
+        /// Copies a block of bytes from a source buffer.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <param name="offset">Index in the source buffer.</param>
+        /// <param name="length">How many bytes should be copied.</param>
+        /// <returns></returns>
+        public static byte[] CopyByteBlock(byte[] buffer, int offset, int length) {
+            byte[] b = new byte[length];
+            Buffer.BlockCopy(buffer, offset, b, 0, length);
+            return b;
+        }
+        public static byte[] CopyByteBlock(Stream stream, int offset, int length) {
+            byte[] b = new byte[length];
+            stream.Position = 0;
+            stream.Read(b, offset, length);
+            return b;
         }
 
         /// <summary>
