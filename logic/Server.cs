@@ -1,6 +1,7 @@
 ﻿using GG2server.logic.data;
 using GG2server.objects;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,13 +15,16 @@ namespace GG2server.logic {
     class Server {
         private readonly short PORT;
         public readonly byte[] id;
+        private readonly Dictionary<byte, sbyte> commandBytes;
 
         private string password;
         private byte playerLimit;
         private string serverName;
+        private string currentMap;
         private bool upnp;
         private string mapMD5;
-        private Stopwatch timer;
+        private Stopwatch stopwatch;
+        private List<byte> sendbuffer;
 
         public Random random;
 
@@ -30,14 +34,35 @@ namespace GG2server.logic {
             this.password = password;
             this.playerLimit = playerLimit;
             this.serverName = serverName;
-            this.timer = new Stopwatch();
+            this.stopwatch = new Stopwatch();
+            sendbuffer = new List<byte>();
             this.upnp = upnp;
             if (upnp) NetworkHelper.RegisterServerport(port);
+
+            currentMap = "ctf_truefort";
 
             id = new byte[16];
             for (byte i = 0; i < 16; i++) {
                 id[i] = (byte)(random.Next()%256);
             }
+
+            commandBytes = new Dictionary<byte, sbyte>();
+            commandBytes.Add(Constants.PLAYER_LEAVE, 0);
+            commandBytes.Add(Constants.PLAYER_CHANGECLASS, 1);
+            commandBytes.Add(Constants.PLAYER_CHANGETEAM, 1);
+            commandBytes.Add(Constants.CHAT_BUBBLE, 1);
+            commandBytes.Add(Constants.BUILD_SENTRY, 0);
+            commandBytes.Add(Constants.DESTROY_SENTRY, 0);
+            commandBytes.Add(Constants.DROP_INTEL, 0);
+            commandBytes.Add(Constants.OMNOMNOMNOM, 0);
+            commandBytes.Add(Constants.TOGGLE_ZOOM, 0);
+            commandBytes.Add(Constants.PLAYER_CHANGENAME, Constants.commandBytesPrefixLength1);
+            commandBytes.Add(Constants.INPUTSTATE, 4);
+            commandBytes.Add(Constants.REWARD_REQUEST, Constants.commandBytesPrefixLength1);
+            commandBytes.Add(Constants.REWARD_CHALLENGE_RESPONSE, 16);
+            commandBytes.Add(Constants.PLUGIN_PACKET, Constants.commandBytesPrefixLength2);
+            commandBytes.Add(Constants.CLIENT_SETTINGS, 1);
+
         }
         public Server() : this("My server", 12, 8190, "", true) { }
 
@@ -66,8 +91,134 @@ namespace GG2server.logic {
                 timer.Elapsed += sendLobbyRegistration;
                 timer.Enabled = true;
 
+                mapMD5 = "";
+                long time = 0;
+                int ticks = 0;
+
+                stopwatch.Start();
                 while (true) {
-                    // Basic handling of joining clients.
+                    time = stopwatch.ElapsedMilliseconds;
+
+                    foreach (Player player in Player.Players) {
+                        Socket socket = player.Socket;
+                        if (socket.Poll(100, SelectMode.SelectError)) {
+                            Player.Players.Remove(player);
+                            continue;
+                        }
+
+                        if (socket.Available > 0) {
+                            LogHelper.Log(socket.Available + " bytes available", LogLevel.debug);
+                            switch (player.commandReceiveState) {
+                                case 0:
+                                    player.commandReceiveCommand = socket.Read_ubyte();
+                                        try {
+                                            switch(commandBytes[player.commandReceiveCommand]) {
+                                                case Constants.commandBytesPrefixLength1:
+                                                    player.commandReceiveState = 1;
+                                                    player.commandReceiveExpectedBytes = 1;
+                                                    break;
+
+                                                case Constants.commandBytesPrefixLength2:
+                                                    player.commandReceiveState = 3;
+                                                    player.commandReceiveExpectedBytes = 2;
+                                                    break;
+
+                                                default:
+                                                    player.commandReceiveState = 2;
+                                                    player.commandReceiveExpectedBytes = (byte)commandBytes[player.commandReceiveCommand];
+                                                    break;
+                                            }
+                                        } catch (KeyNotFoundException) { }
+                                        break;
+
+                                    case 1:
+                                        player.commandReceiveState = 2;
+                                        player.commandReceiveExpectedBytes = socket.Read_ubyte();
+                                        break;
+
+                                    case 3:
+                                        player.commandReceiveState = 2;
+                                        player.commandReceiveExpectedBytes = socket.Read_ushort();
+                                        break;
+
+                                    case 2:
+                                        switch (player.commandReceiveCommand) {
+                                            case Constants.PLAYER_LEAVE:
+                                                Player.Players.Remove(player);
+                                                break;
+                                            case Constants.PLAYER_CHANGECLASS:
+                                                player.Class = (Class)socket.Read_ubyte();
+                                                break;
+                                            case Constants.PLAYER_CHANGETEAM:
+                                                player.Team = (Team)socket.Read_ubyte();
+                                                break;
+                                            case Constants.CHAT_BUBBLE:
+                                                byte bubble = socket.Read_ubyte();
+                                                // TODO
+                                                break;
+                                            case Constants.BUILD_SENTRY:
+                                                // TODO
+                                                break;
+                                            case Constants.DESTROY_SENTRY:
+                                                // TODO
+                                                break;
+                                            case Constants.DROP_INTEL:
+                                                // TODO
+                                                break;
+                                            case Constants.OMNOMNOMNOM:
+                                                // TODO
+                                                break;
+                                            case Constants.TOGGLE_ZOOM:
+                                                // TODO
+                                                break;
+                                            case Constants.PLAYER_CHANGENAME:
+                                                player.Name = NetworkHelper.GetString(socket.Read(player.commandReceiveExpectedBytes));
+                                                break;
+                                            case Constants.INPUTSTATE:
+                                                socket.Read(4);
+                                                // TODO
+                                                break;
+                                            case Constants.REWARD_REQUEST:
+                                                socket.Read(socket.Read_ubyte());
+                                                // TODO
+                                                break;
+                                            case Constants.REWARD_CHALLENGE_RESPONSE:
+                                                socket.Read(16);
+                                                // TODO
+                                                break;
+                                            case Constants.PLUGIN_PACKET:
+                                                LogHelper.Log("Received a pluginpacket.", LogLevel.warning);
+                                                break;
+                                            case Constants.CLIENT_SETTINGS:
+                                                socket.Read_ubyte();
+                                                LogHelper.Log("Received client settings.", LogLevel.debug);
+                                                // TODO
+                                                break;
+                                        }
+                                        player.commandReceiveState = 0;
+                                        player.commandReceiveExpectedBytes = 1;
+                                        break;
+                                }
+                            }
+                        }
+
+                    // Do stuff
+                    Player.doPlayerStep();
+
+                    if (ticks % 7 == 0) {
+                        ticks = 0;
+                    }
+
+                    // Send data
+                    if (sendbuffer.Count > 0) {
+                        byte[] buffer = sendbuffer.ToArray();
+                        foreach (Player player in Player.Players) {
+                            player.Socket.Send(buffer);
+                        }
+                        sendbuffer.Clear();
+                    }
+
+                    // Handle joining clients.
                     try {
                         Socket clientSocket = serverSocket.Accept();
                         LogHelper.Log("Connection", LogLevel.debug);
@@ -75,10 +226,10 @@ namespace GG2server.logic {
                         Thread t = new Thread(player.Service);
                         t.Start();
                         t.IsBackground = true;
-                        Thread.Sleep(10);
                     } catch (SocketException) { }
 
-                    // Do stuff
+                    ticks++;
+                    Thread.Sleep(Math.Max(0, 1000 / 60 - (int)(stopwatch.ElapsedMilliseconds - time)));
                 }
             } catch(ThreadAbortException) {
                 LogHelper.Log("Server is shutting down", LogLevel.title);
@@ -103,7 +254,7 @@ namespace GG2server.logic {
             buffer.Add((byte)0);  // TCP
             buffer.AddRange(NetworkHelper.GetBytes((short)PORT));
             buffer.AddRange(NetworkHelper.GetBytes((short)this.playerLimit));
-            buffer.AddRange(NetworkHelper.GetBytes((short)Player.Length));
+            buffer.AddRange(NetworkHelper.GetBytes((short)Player.Players.Count));
             buffer.AddRange(NetworkHelper.GetBytes((short)0));  // Number of bots
             if (password != "") buffer.AddRange(NetworkHelper.GetBytes((short)1));
             else buffer.AddRange(NetworkHelper.GetBytes((short)0));
@@ -117,7 +268,7 @@ namespace GG2server.logic {
             buffer.AddRange(NetworkHelper.KeyValueToBytes("map", "Not implemented lol"));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("protocol_id", GG2server.protocolUuid));
             try {
-                udpClient.Send(buffer.ToArray(), buffer.Count);
+                //udpClient.Send(buffer.ToArray(), buffer.Count);
             } catch (Exception ex) {
                 LogHelper.Log(ex.ToString(), LogLevel.error);
             }
@@ -140,27 +291,6 @@ namespace GG2server.logic {
             }
         }
 
-        /// <summary>
-        /// Calculate the new md5 and parse the map
-        /// </summary>
-        /// <param name="map">The filename of the map</param>
-        private void GotoMap(string map) {
-            MD5 md5 = MD5.Create();
-            using (FileStream stream = File.OpenRead(map)) {
-                mapMD5 = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
-                loadMap(stream);
-            }
-        }
-
-        /// <summary>
-        /// Load the leveldata from a map and parse it.
-        /// </summary>
-        /// <param name="stream">A filestream that contains the map</param>
-        private void loadMap(FileStream stream) {
-            string keyword = "Gang Garrison 2 Level Data";
-            // TODO
-        }
-
         ~Server() {
             if (upnp) NetworkHelper.UnregServerport(PORT);
         }
@@ -169,17 +299,35 @@ namespace GG2server.logic {
             get {
                 return this.password;
             }
-            set {
-                this.password = value;
-            }
         }
 
         public string ServerName {
             get {
                 return this.serverName;
             }
-            set {
-                this.serverName = value;
+        }
+
+        public string CurrentMap {
+            get {
+                return this.currentMap;
+            }
+        }
+
+        public string MapMD5 {
+            get {
+                return this.mapMD5;
+            }
+        }
+
+        public int PlayerLimit {
+            get {
+                return this.playerLimit;
+            }
+        }
+
+        public List<byte> Sendbuffer {
+            get {
+                return this.sendbuffer;
             }
         }
     }

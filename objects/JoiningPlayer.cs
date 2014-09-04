@@ -1,6 +1,7 @@
 ﻿using GG2server.logic;
 using GG2server.logic.data;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -20,7 +21,7 @@ namespace GG2server.objects {
         private byte messageState;
         private byte expectedBytes;
         private DateTime lastContact;
-        private int cumulativeMapBytes;
+        //private int cumulativeMapBytes;
 
         public JoiningPlayer(Socket socket) {
             this.socket = socket;
@@ -28,7 +29,7 @@ namespace GG2server.objects {
             this.state = STATE_EXPECT_HELLO;
             this.expectedBytes = 17;
             this.lastContact = DateTime.Now;
-            this.cumulativeMapBytes = 0;
+            //this.cumulativeMapBytes = 0;
         }
 
         /// <summary>
@@ -48,8 +49,7 @@ namespace GG2server.objects {
                         lastContact = DateTime.Now;
                         switch (state) {
                             case STATE_EXPECT_HELLO:
-                                buffer = new byte[expectedBytes];
-                                socket.Receive(buffer, expectedBytes, SocketFlags.None);
+                                buffer = socket.Read(expectedBytes);
                                 byte hello = buffer[0];
                                 buffer = buffer.Where((x, i) => i != 0).ToArray();
 
@@ -93,16 +93,27 @@ namespace GG2server.objects {
                                 break;
 
                             case STATE_CLIENT_AUTHENTICATED:
-                                // TODO: actually accept the player.
-                                socket.Send(new byte[] { Constants.INCOMPATIBLE_PROTOCOL });
-                                error = true;
+                                List<byte> b2 = new List<byte>();
+                                b2.Add(Constants.HELLO);
+                                b2.Add((byte)GG2server.Server.ServerName.Length);
+                                b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.ServerName));
+                                b2.Add((byte)GG2server.Server.CurrentMap.Length);
+                                b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.CurrentMap));
+                                b2.Add((byte)GG2server.Server.MapMD5.Length);
+                                b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.MapMD5));
+                                
+                                // Server sent plugins
+                                b2.Add(0);
+                                b2.Add(0);
+                                
+                                state = STATE_EXPECT_COMMAND;
+                                expectedBytes = 1;
+                                socket.Send(b2.ToArray<byte>());
                                 break;
 
                             case STATE_EXPECT_COMMAND:
-                                byte[] command = new byte[1];
-                                socket.Receive(command, 1, SocketFlags.None);
-
-                                switch (command[0]) {
+                                byte command = socket.Read_ubyte();
+                                switch (command) {
                                     case Constants.PING:
                                         state = STATE_EXPECT_COMMAND;
                                         expectedBytes = 1;
@@ -123,9 +134,18 @@ namespace GG2server.objects {
                                 break;
 
                             case STATE_EXPECT_NAME:
-                                // TODO
-                                socket.Send(new byte[] { Constants.INCOMPATIBLE_PROTOCOL });
-                                error = true;
+                                if (Player.Players.Count >= GG2server.Server.PlayerLimit) {
+                                    socket.Send(new byte[] { Constants.SERVER_FULL });
+                                    error = true;
+                                } else {
+                                    buffer = socket.Read(expectedBytes);
+
+                                    String name = NetworkHelper.GetString(buffer).Replace('#', ' ');
+                                    if (name.Length > 20) name = name.Substring(0, 20);
+                                    Player player = new Player(socket, name);
+                                    LogHelper.Log("Player " + name + " joined the game", LogLevel.info);
+                                    error = true;
+                                }
                                 break;
                         }
                     }
@@ -133,7 +153,6 @@ namespace GG2server.objects {
                 }
             } catch (Exception ex) {
                 LogHelper.Log(ex.ToString(), LogLevel.warning);
-            } finally {
                 socket.Close();
             }
         }
