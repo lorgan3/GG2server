@@ -63,6 +63,17 @@
     <Compile Include="objects\IEntity.cs" />
     <Compile Include="objects\JoiningPlayer.cs" />
     <Compile Include="objects\Player.cs" />
+    <Compile Include="objects\Weapon.cs" />
+    <Compile Include="objects\weapons\Blade.cs" />
+    <Compile Include="objects\weapons\Flamethrower.cs" />
+    <Compile Include="objects\weapons\Revolver.cs" />
+    <Compile Include="objects\weapons\Minigun.cs" />
+    <Compile Include="objects\weapons\Shotgun.cs" />
+    <Compile Include="objects\weapons\Medigun.cs" />
+    <Compile Include="objects\weapons\Minegun.cs" />
+    <Compile Include="objects\weapons\Rifle.cs" />
+    <Compile Include="objects\weapons\Rocketlauncher.cs" />
+    <Compile Include="objects\weapons\Scattergun.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -36,6 +36,7 @@ namespace GG2server.logic.data {
         public const int REWARD_REQUEST = 50;
         public const int REWARD_CHALLENGE_CODE = 51;
         public const int REWARD_CHALLENGE_RESPONSE = 52;
+        public const int WEAPON_FIRE = 54;
         public const int PLUGIN_PACKET = 55;
         public const int PING = 57;
         public const int CLIENT_SETTINGS = 58;
@@ -44,5 +45,19 @@ namespace GG2server.logic.data {
 
         public const sbyte commandBytesPrefixLength1 = -2;  // The length of the command is indicated by the first byte
         public const sbyte commandBytesPrefixLength2 = -3;  // The length of the command is indicated by the first two bytes
+
+        public const byte KILLS = 0;
+        public const byte DEATHS = 1;
+        public const byte CAPS = 2;
+        public const byte ASSISTS = 3;
+        public const byte DESTRUCTION = 4;
+        public const byte STABS = 5;
+        public const byte HEALING = 6;
+        public const byte DEFENSES = 7;
+        public const byte INVULNS = 8;
+        public const byte BONUS = 9;
+        public const byte DOMINATIONS = 10;
+        public const byte REVENGE = 11;
+        public const byte POINTS = 12;
     }
 }

@@ -4,14 +4,15 @@ using GG2server.logic.data;
 using System.Collections.Generic;
 using System.Net.Sockets;
 namespace GG2server.objects {
-    class Player : IEntity {
+    public class Player : IEntity {
         private static List<Player> players = new List<Player>();
         private Socket socket;
         
         private string name;
-        private Team team;
+        private Team team = Team.spectator;
         private Class player_class;
         private Character character;
+        private Dictionary<byte, byte> stats;
 
         // vars for receiving client commands
         public byte commandReceiveState;
@@ -21,6 +22,21 @@ namespace GG2server.objects {
         public Player(Socket socket, string name) {
             this.socket = socket;
             this.name = name;
+
+            stats = new Dictionary<byte, byte>();
+            stats.Add(Constants.KILLS, 0);
+            stats.Add(Constants.DEATHS, 0);
+            stats.Add(Constants.CAPS, 0);
+            stats.Add(Constants.ASSISTS, 0);
+            stats.Add(Constants.DESTRUCTION, 0);
+            stats.Add(Constants.STABS, 0);
+            stats.Add(Constants.HEALING, 0);
+            stats.Add(Constants.DEFENSES, 0);
+            stats.Add(Constants.INVULNS, 0);
+            stats.Add(Constants.BONUS, 0);
+            stats.Add(Constants.DOMINATIONS, 0);
+            stats.Add(Constants.REVENGE, 0);
+            stats.Add(Constants.POINTS, 0);
 
             ServerJoinUpdate();
 
@@ -32,7 +48,28 @@ namespace GG2server.objects {
             players.Add(this);
         }
 
-        public void Serialize() {
+        public void Serialize(UpdateType type, List<byte> buffer) {
+            if (type == UpdateType.full) {
+                buffer.Add(stats[Constants.KILLS]);
+                buffer.Add(stats[Constants.DEATHS]);
+                buffer.Add(stats[Constants.CAPS]);
+                buffer.Add(stats[Constants.ASSISTS]);
+                buffer.Add(stats[Constants.DESTRUCTION]);
+                buffer.Add(stats[Constants.STABS]);
+                buffer.Add(stats[Constants.HEALING]);
+                buffer.Add(stats[Constants.DEFENSES]);
+                buffer.Add(stats[Constants.INVULNS]);
+                buffer.Add(stats[Constants.BONUS]);
+                buffer.Add(stats[Constants.KILLS]);
+                buffer.Add(0);  // queue jump
+                buffer.AddRange(NetworkHelper.GetBytes((short)0));  // rewards
+            }
+
+            byte subobjects = 0;
+            if (character != null) subobjects &= 1;
+            buffer.Add(subobjects);
+
+            if (character != null) character.Serialize(type, buffer);
         }
 
         public void Deserialize() {
@@ -70,6 +107,18 @@ namespace GG2server.objects {
             }
         }
 
+        /// <summary>
+        /// Removes a player from the server.
+        /// </summary>
+        public void Remove() {
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
+            socket = null;
+
+            killCharacter();
+            players.Remove(this);
+        }
+
         public static void doPlayerStep() {
             foreach (Player player in players) {
                 // TODO
@@ -77,8 +126,6 @@ namespace GG2server.objects {
         }
 
         ~Player() {
-            players.Remove(this);
-            socket.Close();
             LogHelper.Log("Player " + name + " has left.", LogLevel.info);
         }
 

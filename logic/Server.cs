@@ -99,10 +99,14 @@ namespace GG2server.logic {
                 while (true) {
                     time = stopwatch.ElapsedMilliseconds;
 
-                    foreach (Player player in Player.Players) {
+                    //foreach (Player player in Player.Players) {
+                    for(int i = Player.Players.Count-1; i>=0; i--) {
+                        Player player = Player.Players[i];
                         Socket socket = player.Socket;
-                        if (socket.Poll(100, SelectMode.SelectError)) {
-                            Player.Players.Remove(player);
+
+                        // See if the player is still connected
+                        if (socket.Poll(1000, SelectMode.SelectError) || (socket.Poll(1000, SelectMode.SelectRead) && socket.Available == 0)) {
+                            player.Remove();
                             continue;
                         }
 
@@ -191,7 +195,6 @@ namespace GG2server.logic {
                                                 break;
                                             case Constants.CLIENT_SETTINGS:
                                                 socket.Read_ubyte();
-                                                LogHelper.Log("Received client settings.", LogLevel.debug);
                                                 // TODO
                                                 break;
                                         }
