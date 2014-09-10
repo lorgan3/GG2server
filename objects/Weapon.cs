@@ -2,6 +2,7 @@
 using GG2server.logic.data;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GG2server.objects {
@@ -14,6 +15,7 @@ namespace GG2server.objects {
         internal byte readyToShoot;
         internal DateTime startTime;
         internal Character owner;
+        internal CancellationTokenSource cts;
 
         public Weapon(Character owner) {
             this.owner = owner;
@@ -22,17 +24,23 @@ namespace GG2server.objects {
             Refire(refireTime);
         }
 
-        public async void Refire(int timeout) {
+        public virtual async void Refire(int timeout) {
             await Task.Delay(timeout);
             readyToShoot = 1;
         }
 
-        public async void Reload(int timeout) {
-            await Task.Delay(timeout);
+        public virtual async void Reload(int timeout) {
+            try {
+                cts = new System.Threading.CancellationTokenSource();
+                await Task.Delay(timeout, cts.Token);
+                cts = null;
+            } catch (Exception) { };
         }
 
         public void Primary() {
-            if (readyToShoot == 1) {
+            if (readyToShoot == 1 && ammoCount > 0) {
+                if (cts != null) cts.Cancel();  // Stop reloading
+                ammoCount -= 1;
                 readyToShoot = 0;
                 FireEvent(0);
                 Refire(refireTime);
@@ -47,11 +55,11 @@ namespace GG2server.objects {
             var buffer = GG2server.Server.Sendbuffer;
             buffer.Add(Constants.WEAPON_FIRE);
             buffer.Add((byte)Player.Players.IndexOf(owner.Player));
-            buffer.AddRange(NetworkHelper.GetBytes((ushort)owner.x * 5));
-            buffer.AddRange(NetworkHelper.GetBytes((ushort)owner.y * 5));
-            buffer.Add((byte)(owner.vspeed * 8.5));
+            buffer.AddRange(NetworkHelper.GetBytes((ushort)(owner.x * 5), true));
+            buffer.AddRange(NetworkHelper.GetBytes((ushort)(owner.y * 5), true));
             buffer.Add((byte)(owner.hspeed * 8.5));
-            buffer.AddRange(NetworkHelper.GetBytes(seed));
+            buffer.Add((byte)(owner.vspeed * 8.5));
+            buffer.AddRange(NetworkHelper.GetBytes(seed, true));
         }
 
         public void Serialize(UpdateType type, List<byte> buffer) {

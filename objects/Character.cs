@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace GG2server.objects {
     public class Character : IEntity {
-        public float x;
+        public float x=1000+GG2server.Server.random.Next(400);
         public float y;
         private float hp;
         private float maxHP;
@@ -25,8 +25,18 @@ namespace GG2server.objects {
         private float runPower;
         private byte tauntLength;
 
+        public float aimdirection;
+        public byte pressedKeys;
+        public byte releasedKeys;
+        public byte keyState;
+        private byte oldKeyState;
+        private short aimDistance;
+        public ushort tmp;
+
         public Character(Player player) {
             this.player = player;
+            vspeed = 10f;
+            hspeed = 0f;
 
             switch (player.Class) {
                 case Class.scout:
@@ -107,17 +117,17 @@ namespace GG2server.objects {
         }
         
         public void Serialize(UpdateType type, List<byte> buffer) {
-            buffer.Add(0);  // Keystate
-            buffer.AddRange(NetworkHelper.GetBytes((short)0));  // Aimdirection
-            buffer.Add(0);  // Aimdistance
+            buffer.Add(keyState);
+            buffer.AddRange(NetworkHelper.GetBytes((ushort)((aimdirection * 65536) / 360.0), true));
+            buffer.Add((byte)(aimDistance/2));
 
             if (type == UpdateType.quick || type == UpdateType.full) {
-                buffer.AddRange(NetworkHelper.GetBytes((ushort)x*5));
-                buffer.AddRange(NetworkHelper.GetBytes((ushort)y*5));
-                buffer.Add((byte)(vspeed * 8.5));
+                buffer.AddRange(NetworkHelper.GetBytes((ushort)(x*5), true));
+                buffer.AddRange(NetworkHelper.GetBytes((ushort)(y*5), true));
                 buffer.Add((byte)(hspeed * 8.5));
+                buffer.Add((byte)(vspeed * 8.5));
                 buffer.Add((byte)Math.Ceiling(hp));
-                buffer.Add(0);  // Ammocount
+                buffer.Add(weapon.ammoCount);
                 buffer.Add(0);  // cloak & movestate
             }
 
@@ -140,9 +150,9 @@ namespace GG2server.objects {
                         buffer.Add(0);
                         break;
                 }
-                buffer.AddRange(NetworkHelper.GetBytes((short)0)); // Intel grab time
+                buffer.AddRange(NetworkHelper.GetBytes((short)0, true)); // Intel grab time
                 buffer.Add(0);  // Intel
-                buffer.AddRange(NetworkHelper.GetBytes((short)0));  // Intel recharge
+                buffer.AddRange(NetworkHelper.GetBytes((short)0, true));  // Intel recharge
 
                 // Weapon
                 weapon.Serialize(type, buffer);
@@ -152,6 +162,33 @@ namespace GG2server.objects {
         public Player Player {
             get {
                 return this.player;
+            }
+        }
+
+        public byte KeyState {
+            set {
+                oldKeyState = keyState;
+                keyState = value;
+                pressedKeys = (byte)(keyState & ~oldKeyState);
+                releasedKeys = (byte)~pressedKeys;
+            }
+        }
+
+        public ushort AimDirection {
+            set {
+                aimdirection = (float)((value * 360.0) / 65536);
+            }
+        }
+
+        public byte AimDistance {
+            set {
+                aimDistance = (short)(value * 2);
+            }
+        }
+
+        public Weapon Weapon {
+            get {
+                return this.weapon;
             }
         }
     }

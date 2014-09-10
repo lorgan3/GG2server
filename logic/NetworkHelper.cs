@@ -39,19 +39,29 @@ namespace GG2server.logic {
         /// <summary>
         /// Converts a value to a big endian byte array.
         /// </summary>
-        public static byte[] GetBytes(short x) {
+        public static byte[] GetBytes(short x, bool isLittleEndian) {
             byte[] bytes = BitConverter.GetBytes(x);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(bytes);
             return bytes;
         }
-        public static byte[] GetBytes(int x) {
+        public static byte[] GetBytes(ushort x, bool isLittleEndian) {
             byte[] bytes = BitConverter.GetBytes(x);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(bytes);
             return bytes;
         }
-        public static byte[] GetBytes(float x) {
+        public static byte[] GetBytes(int x, bool isLittleEndian) {
             byte[] bytes = BitConverter.GetBytes(x);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(bytes);
+            return bytes;
+        }
+        public static byte[] GetBytes(float x, bool isLittleEndian) {
+            byte[] bytes = BitConverter.GetBytes(x);
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(bytes);
+            return bytes;
+        }
+        public static byte[] GetBytes(uint x, bool isLittleEndian) {
+            byte[] bytes = BitConverter.GetBytes(x);
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(bytes);
             return bytes;
         }
         public static byte[] GetBytes(string x) {
@@ -64,13 +74,13 @@ namespace GG2server.logic {
         /// <summary>
         /// Get a long from a buffer with 4 bytes
         /// </summary>
-        public static long GetLong(byte[] buffer) {
-            if (BitConverter.IsLittleEndian) Array.Reverse(buffer);
+        public static long GetLong(byte[] buffer, bool isLittleEndian) {
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(buffer);
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        public static ushort GetShort(byte[] buffer) {
-            if (BitConverter.IsLittleEndian) Array.Reverse(buffer);
+        public static ushort GetShort(byte[] buffer, bool isLittleEndian) {
+            if (BitConverter.IsLittleEndian != isLittleEndian) Array.Reverse(buffer);
             return BitConverter.ToUInt16(buffer, 0);
         }
 
@@ -84,7 +94,7 @@ namespace GG2server.logic {
             byte[] bytes = new byte[3 + keyBytes.Length + valueBytes.Length];
             bytes[0] = (byte)keyBytes.Length;
             keyBytes.CopyTo(bytes, 1);
-            GetBytes((short)valueBytes.Length).CopyTo(bytes, 1 + keyBytes.Length);
+            GetBytes((short)valueBytes.Length, false).CopyTo(bytes, 1 + keyBytes.Length);
             valueBytes.CopyTo(bytes, 3 + keyBytes.Length);
 
             return bytes;
@@ -95,7 +105,7 @@ namespace GG2server.logic {
             byte[] bytes = new byte[3 + keyBytes.Length + valueBytes.Length];
             bytes[0] = (byte)keyBytes.Length;
             keyBytes.CopyTo(bytes, 1);
-            GetBytes((short)valueBytes.Length).CopyTo(bytes, 1 + keyBytes.Length);
+            GetBytes((short)valueBytes.Length, false).CopyTo(bytes, 1 + keyBytes.Length);
             valueBytes.CopyTo(bytes, 3 + keyBytes.Length);
 
             return bytes;

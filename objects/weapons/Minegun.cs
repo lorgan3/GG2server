@@ -15,7 +15,7 @@ namespace GG2server.objects.weapons {
             reloadBuffer = 26 / 30 * 1000;
         }
 
-        public void Serialize(UpdateType type, List<byte> buffer) {
+        public new void Serialize(UpdateType type, List<byte> buffer) {
             base.Serialize(type, buffer);
             buffer.Add(lobbed);
         }

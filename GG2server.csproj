@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="data\Config.cs" />
+    <Compile Include="data\FileReader.cs" />
     <Compile Include="logic\data\Constants.cs" />
     <Compile Include="logic\data\Enums.cs" />
     <Compile Include="logic\data\Exceptions.cs" />

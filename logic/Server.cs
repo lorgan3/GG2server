@@ -13,33 +13,23 @@ using System.Timers;
 
 namespace GG2server.logic {
     class Server {
-        private readonly short PORT;
         public readonly byte[] id;
         private readonly Dictionary<byte, sbyte> commandBytes;
 
-        private string password;
-        private byte playerLimit;
-        private string serverName;
         private string currentMap;
-        private bool upnp;
         private string mapMD5;
         private Stopwatch stopwatch;
         private List<byte> sendbuffer;
 
         public Random random;
 
-        public Server(string serverName, byte playerLimit, short port, string password, bool upnp) {
+        public Server() {
             this.random = new Random();
-            this.PORT = port;
-            this.password = password;
-            this.playerLimit = playerLimit;
-            this.serverName = serverName;
             this.stopwatch = new Stopwatch();
             sendbuffer = new List<byte>();
-            this.upnp = upnp;
-            if (upnp) NetworkHelper.RegisterServerport(port);
+            if (GG2server.announce) NetworkHelper.RegisterServerport(GG2server.port);
 
-            currentMap = "ctf_truefort";
+            currentMap = GG2server.maps[0];
 
             id = new byte[16];
             for (byte i = 0; i < 16; i++) {
@@ -64,7 +54,10 @@ namespace GG2server.logic {
             commandBytes.Add(Constants.CLIENT_SETTINGS, 1);
 
         }
-        public Server() : this("My server", 12, 8190, "", true) { }
+
+        private void RickRoll(Object source, ElapsedEventArgs e) {
+            ServerMessage(GG2server.Message, sendbuffer);
+        }
 
         /// <summary>
         /// Run the server
@@ -73,7 +66,7 @@ namespace GG2server.logic {
             Socket serverSocket;
 
             try {
-                IPEndPoint ep = new IPEndPoint(IPAddress.Any, PORT);
+                IPEndPoint ep = new IPEndPoint(IPAddress.Any, GG2server.port);
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 serverSocket.Bind(ep);
                 serverSocket.Listen(50);
@@ -85,11 +78,17 @@ namespace GG2server.logic {
             }
 
             try {
-                // Keep sending a lobby registration
-                sendLobbyRegistration(null, null);
-                System.Timers.Timer timer = new System.Timers.Timer(30000);
-                timer.Elapsed += sendLobbyRegistration;
-                timer.Enabled = true;
+                if (GG2server.announce) {
+                    // Keep sending a lobby registration
+                    sendLobbyRegistration(null, null);
+                    System.Timers.Timer timer = new System.Timers.Timer(30000);
+                    timer.Elapsed += sendLobbyRegistration;
+                    timer.Enabled = true;
+                }
+
+                System.Timers.Timer timer2 = new System.Timers.Timer(3000);
+                timer2.Elapsed += RickRoll;
+                timer2.Enabled = true;
 
                 mapMD5 = "";
                 long time = 0;
@@ -110,8 +109,7 @@ namespace GG2server.logic {
                             continue;
                         }
 
-                        if (socket.Available > 0) {
-                            LogHelper.Log(socket.Available + " bytes available", LogLevel.debug);
+                        while (socket.Available > 0) {
                             switch (player.commandReceiveState) {
                                 case 0:
                                     player.commandReceiveCommand = socket.Read_ubyte();
@@ -179,8 +177,11 @@ namespace GG2server.logic {
                                                 player.Name = NetworkHelper.GetString(socket.Read(player.commandReceiveExpectedBytes));
                                                 break;
                                             case Constants.INPUTSTATE:
-                                                socket.Read(4);
-                                                // TODO
+                                                if (player.Character != null) {
+                                                    player.Character.KeyState = socket.Read_ubyte();
+                                                    player.Character.AimDirection = socket.Read_ushort();
+                                                    player.Character.AimDistance = socket.Read_ubyte();
+                                                } else socket.Read(4);
                                                 break;
                                             case Constants.REWARD_REQUEST:
                                                 socket.Read(socket.Read_ubyte());
@@ -208,8 +209,11 @@ namespace GG2server.logic {
                     // Do stuff
                     Player.doPlayerStep();
 
-                    if (ticks % 7 == 0) {
-                        ticks = 0;
+                    if (ticks % 2 == 0) {
+                        if (ticks % 14 == 0) {
+                            ticks = 0;
+                              Serialize(UpdateType.quick, sendbuffer);
+                        } else Serialize(UpdateType.inputstate, sendbuffer);
                     }
 
                     // Send data
@@ -232,7 +236,9 @@ namespace GG2server.logic {
                     } catch (SocketException) { }
 
                     ticks++;
-                    Thread.Sleep(Math.Max(0, 1000 / 60 - (int)(stopwatch.ElapsedMilliseconds - time)));
+                    int delay = (int)(stopwatch.ElapsedMilliseconds - time);
+                    if (delay >= 16) LogHelper.Log("Can't keep up! (" + delay + "ms)", LogLevel.warning);
+                    Thread.Sleep(Math.Max(0, 16 - delay));
                 }
             } catch(ThreadAbortException) {
                 LogHelper.Log("Server is shutting down", LogLevel.title);
@@ -255,23 +261,23 @@ namespace GG2server.logic {
             buffer.AddRange(this.id);
             buffer.AddRange(GG2server.gg2lobbyId);
             buffer.Add((byte)0);  // TCP
-            buffer.AddRange(NetworkHelper.GetBytes((short)PORT));
-            buffer.AddRange(NetworkHelper.GetBytes((short)this.playerLimit));
-            buffer.AddRange(NetworkHelper.GetBytes((short)Player.Players.Count));
-            buffer.AddRange(NetworkHelper.GetBytes((short)0));  // Number of bots
-            if (password != "") buffer.AddRange(NetworkHelper.GetBytes((short)1));
-            else buffer.AddRange(NetworkHelper.GetBytes((short)0));
+            buffer.AddRange(NetworkHelper.GetBytes((short)GG2server.port, false));
+            buffer.AddRange(NetworkHelper.GetBytes((short)GG2server.playerLimit, false));
+            buffer.AddRange(NetworkHelper.GetBytes((short)Player.Players.Count, false));
+            buffer.AddRange(NetworkHelper.GetBytes((short)0, false));  // Number of bots
+            if (GG2server.password != "") buffer.AddRange(NetworkHelper.GetBytes((short)1, false));
+            else buffer.AddRange(NetworkHelper.GetBytes((short)0, false));
 
-            buffer.AddRange(NetworkHelper.GetBytes((short)7));  // Amount of keypairs
-            buffer.AddRange(NetworkHelper.KeyValueToBytes("name", serverName));
+            buffer.AddRange(NetworkHelper.GetBytes((short)7, false));  // Amount of keypairs
+            buffer.AddRange(NetworkHelper.KeyValueToBytes("name", GG2server.serverName));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("game", Constants.GAME_NAME_STRING));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("game_short", "c\\# gg2"));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("game_ver", Constants.GAME_VERSION_STRING));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("game_url", Constants.GAME_URL_STRING));
-            buffer.AddRange(NetworkHelper.KeyValueToBytes("map", "Not implemented lol"));
+            buffer.AddRange(NetworkHelper.KeyValueToBytes("map", currentMap));
             buffer.AddRange(NetworkHelper.KeyValueToBytes("protocol_id", GG2server.protocolUuid));
             try {
-                //udpClient.Send(buffer.ToArray(), buffer.Count);
+                udpClient.Send(buffer.ToArray(), buffer.Count);
             } catch (Exception ex) {
                 LogHelper.Log(ex.ToString(), LogLevel.error);
             }
@@ -294,20 +300,61 @@ namespace GG2server.logic {
             }
         }
 
+        public void Serialize(UpdateType type, List<byte> buffer) {
+            buffer.Add((byte)type);
+            buffer.Add((byte)Player.Players.Count);
+
+            if (type != UpdateType.caps) {
+                foreach (Player player in Player.Players) {
+                    player.Serialize(type, buffer);
+                }
+            }
+
+            if (type == UpdateType.full) {
+                buffer.AddRange(NetworkHelper.GetBytes((short)0, true));  // Red intel
+                buffer.AddRange(NetworkHelper.GetBytes((short)0, true));  // Blue intel
+
+                buffer.Add(GG2server.capLimit);
+                buffer.Add(0);  // redcaps
+                buffer.Add(0);  // bluecaps
+                buffer.Add(GG2server.respawnTime);
+                // ONLY WORKS FOR CTF FOR NOW!
+                buffer.Add(5);  // Timelimit
+                buffer.AddRange(NetworkHelper.GetBytes((uint)300, true));  // Time left
+
+                for (byte i = 0; i < 10; i++) {
+                    buffer.Add(255);    // Class limits
+                }
+            }
+
+            if (type == UpdateType.caps) {
+                buffer.Add(0);  // redcaps
+                buffer.Add(0);  // bluecaps
+                buffer.Add(GG2server.respawnTime);
+                // ONLY WORKS FOR CTF FOR NOW!
+                buffer.Add(5);  // Timelimit
+                buffer.AddRange(NetworkHelper.GetBytes((uint)300, true));  // Time left
+            }
+        }
+        
+        /// <summary>
+        /// Add a servermessage to the buffer.
+        /// </summary>
+        /// <param name="msg">The message.</param>
+        /// <param name="buffer">The buffer to add the message to.</param>
+        private void ServerMessage(string msg, List<byte> buffer) {
+            if (msg.Length > 255) {
+                LogHelper.Log("The message '" + msg + "' is too long, sending the first 255 bytes", LogLevel.info);
+                msg = msg.Substring(0, 255);
+            }
+
+            buffer.Add(Constants.MESSAGE_STRING);
+            buffer.Add((byte)msg.Length);
+            buffer.AddRange(NetworkHelper.GetBytes(msg));
+        }
+
         ~Server() {
-            if (upnp) NetworkHelper.UnregServerport(PORT);
-        }
-
-        public string Password {
-            get {
-                return this.password;
-            }
-        }
-
-        public string ServerName {
-            get {
-                return this.serverName;
-            }
+            if (GG2server.announce) NetworkHelper.UnregServerport(GG2server.port);
         }
 
         public string CurrentMap {
@@ -319,12 +366,6 @@ namespace GG2server.logic {
         public string MapMD5 {
             get {
                 return this.mapMD5;
-            }
-        }
-
-        public int PlayerLimit {
-            get {
-                return this.playerLimit;
             }
         }
 

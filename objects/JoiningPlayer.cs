@@ -54,7 +54,7 @@ namespace GG2server.objects {
                                 buffer = buffer.Where((x, i) => i != 0).ToArray();
 
                                 if (hello == Constants.HELLO && buffer.SequenceEqual(GG2server.protocolUuid)) {
-                                    if (GG2server.Server.Password == "") {
+                                    if (GG2server.password == "") {
                                         state = STATE_CLIENT_AUTHENTICATED;
                                         expectedBytes = 0;
                                     } else {
@@ -83,7 +83,7 @@ namespace GG2server.objects {
                                 buffer = new byte[expectedBytes];
                                 socket.Receive(buffer, expectedBytes, SocketFlags.None);
 
-                                if (NetworkHelper.GetString(buffer) == GG2server.Server.Password) {
+                                if (NetworkHelper.GetString(buffer) == GG2server.password) {
                                     state = STATE_CLIENT_AUTHENTICATED;
                                     expectedBytes = 0;
                                 } else {
@@ -95,8 +95,8 @@ namespace GG2server.objects {
                             case STATE_CLIENT_AUTHENTICATED:
                                 List<byte> b2 = new List<byte>();
                                 b2.Add(Constants.HELLO);
-                                b2.Add((byte)GG2server.Server.ServerName.Length);
-                                b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.ServerName));
+                                b2.Add((byte)GG2server.serverName.Length);
+                                b2.AddRange(NetworkHelper.GetBytes(GG2server.serverName));
                                 b2.Add((byte)GG2server.Server.CurrentMap.Length);
                                 b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.CurrentMap));
                                 b2.Add((byte)GG2server.Server.MapMD5.Length);
@@ -134,7 +134,7 @@ namespace GG2server.objects {
                                 break;
 
                             case STATE_EXPECT_NAME:
-                                if (Player.Players.Count >= GG2server.Server.PlayerLimit) {
+                                if (Player.Players.Count >= GG2server.playerLimit) {
                                     socket.Send(new byte[] { Constants.SERVER_FULL });
                                     error = true;
                                 } else {

@@ -22,7 +22,7 @@ namespace GG2server.objects.weapons {
             uberReady = 0;
         }
 
-        public void Serialize(UpdateType type, List<byte> buffer) {
+        public new void Serialize(UpdateType type, List<byte> buffer) {
             buffer.Add(healTarget);
         }
     }

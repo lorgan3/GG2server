@@ -12,7 +12,7 @@ namespace GG2server.logic.data {
         }
 
         public static ushort Read_ushort(this Socket socket) {
-            return NetworkHelper.GetShort(socket.Read(2));
+            return NetworkHelper.GetShort(socket.Read(2), true);
         }
 
         public static byte[] Read(this Socket socket, int amount) {

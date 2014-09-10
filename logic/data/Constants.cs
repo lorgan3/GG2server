@@ -15,6 +15,7 @@ namespace GG2server.logic.data {
         public const int PLAYER_LEAVE = 2;
         public const int PLAYER_CHANGETEAM = 3;
         public const int PLAYER_CHANGECLASS = 4;
+        public const int PLAYER_SPAWN = 5;
         public const int INPUTSTATE = 6;
         public const int CHANGE_MAP = 7;
         public const int PLAYER_DEATH = 10;
@@ -36,6 +37,7 @@ namespace GG2server.logic.data {
         public const int REWARD_REQUEST = 50;
         public const int REWARD_CHALLENGE_CODE = 51;
         public const int REWARD_CHALLENGE_RESPONSE = 52;
+        public const int MESSAGE_STRING = 53;
         public const int WEAPON_FIRE = 54;
         public const int PLUGIN_PACKET = 55;
         public const int PING = 57;

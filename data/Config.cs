@@ -29,6 +29,8 @@ namespace GG2server.data {
                 object obj = list.Find(kv => kv.Key == key).Value;
                 if (obj != null) return obj;
             }
+
+            WriteConfig(section, key, def);
             return def;
         }
 
@@ -59,7 +61,8 @@ namespace GG2server.data {
         public static Config ConfigFactory() {
             if (File.Exists("gg2.xml")) {
                 try {
-                    XmlSerializer s = new XmlSerializer(typeof(Config));
+                    Type[] extra = { typeof(string[]) };
+                    XmlSerializer s = new XmlSerializer(typeof(Config), extra);
                     using (FileStream fs = new FileStream("gg2.xml", FileMode.Open, FileAccess.Read)) {
                         return (Config)s.Deserialize(fs);
                     }
@@ -73,7 +76,8 @@ namespace GG2server.data {
 
         ~Config() {
             try {
-                XmlSerializer s = new XmlSerializer(typeof(Config));
+                Type[] extra = { typeof(string[]) };
+                XmlSerializer s = new XmlSerializer(typeof(Config), extra);
                 using (FileStream fs = new FileStream("gg2.xml", FileMode.Create, FileAccess.Write)) {
                     using (XmlWriter xw = XmlWriter.Create(fs, new XmlWriterSettings { Indent = true, NewLineOnAttributes = false })) {
                         s.Serialize(xw, this);

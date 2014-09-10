@@ -3,6 +3,7 @@ using GG2server.logic;
 using GG2server.logic.data;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 namespace GG2server.objects {
     public class Player : IEntity {
         private static List<Player> players = new List<Player>();
@@ -21,7 +22,9 @@ namespace GG2server.objects {
 
         public Player(Socket socket, string name) {
             this.socket = socket;
+            socket.Blocking = false;
             this.name = name;
+            this.character = null;
 
             stats = new Dictionary<byte, byte>();
             stats.Add(Constants.KILLS, 0);
@@ -39,13 +42,12 @@ namespace GG2server.objects {
             stats.Add(Constants.POINTS, 0);
 
             ServerJoinUpdate();
+            players.Add(this);
 
             var buffer = GG2server.Server.Sendbuffer;
             buffer.Add(Constants.PLAYER_JOIN);
             buffer.Add((byte)name.Length);
             buffer.AddRange(NetworkHelper.GetBytes(name));
-
-            players.Add(this);
         }
 
         public void Serialize(UpdateType type, List<byte> buffer) {
@@ -56,23 +58,20 @@ namespace GG2server.objects {
                 buffer.Add(stats[Constants.ASSISTS]);
                 buffer.Add(stats[Constants.DESTRUCTION]);
                 buffer.Add(stats[Constants.STABS]);
-                buffer.Add(stats[Constants.HEALING]);
+                buffer.AddRange(NetworkHelper.GetBytes((short)stats[Constants.HEALING], true));
                 buffer.Add(stats[Constants.DEFENSES]);
                 buffer.Add(stats[Constants.INVULNS]);
                 buffer.Add(stats[Constants.BONUS]);
                 buffer.Add(stats[Constants.KILLS]);
                 buffer.Add(0);  // queue jump
-                buffer.AddRange(NetworkHelper.GetBytes((short)0));  // rewards
+                buffer.AddRange(NetworkHelper.GetBytes((short)0, true));  // rewards
             }
 
             byte subobjects = 0;
-            if (character != null) subobjects &= 1;
+            if (character != null) subobjects |= 1;
             buffer.Add(subobjects);
 
             if (character != null) character.Serialize(type, buffer);
-        }
-
-        public void Deserialize() {
         }
 
         private void ServerJoinUpdate() {
@@ -92,18 +91,42 @@ namespace GG2server.objects {
                 buffer.Add((byte)player.name.Length);
                 buffer.AddRange(NetworkHelper.GetBytes(player.name));
 
-                // omit class and team for now
+                // class
+                buffer.Add(Constants.PLAYER_CHANGECLASS);
+                buffer.Add((byte)players.IndexOf(player));
+                buffer.Add((byte)player.Class);
+
+                // team
+                buffer.Add(Constants.PLAYER_CHANGETEAM);
+                buffer.Add((byte)players.IndexOf(player));
+                buffer.Add((byte)player.Team);
             }
 
-            // Skip serialization for now
+            GG2server.Server.Serialize(UpdateType.full, buffer);
 
             socket.Send(buffer.ToArray());
         }
 
-        private void killCharacter() {
+        private void KillCharacter() {
             if (character != null) {
                 character.Die(Constants.FINISHED_OFF_GIB, null, null);
                 character = null;
+                Respawn(GG2server.respawnTime);
+            } else {
+                Respawn(0);
+            }
+        }
+
+        private async void Respawn(int timeout) {
+            if (character == null && team != Team.spectator) {
+                await Task.Delay(timeout);
+                character = new Character(this);
+
+                var buffer = GG2server.Server.Sendbuffer;
+                buffer.Add(Constants.PLAYER_SPAWN);
+                buffer.Add((byte)players.IndexOf(this));
+                buffer.Add(0);  // spawnpoint id
+                buffer.Add(0);  // spawn group
             }
         }
 
@@ -115,18 +138,25 @@ namespace GG2server.objects {
             socket.Close();
             socket = null;
 
-            killCharacter();
+            var buffer = GG2server.Server.Sendbuffer;
+            buffer.Add(Constants.PLAYER_LEAVE);
+            buffer.Add((byte)players.IndexOf(this));
+
+            character = null;
             players.Remove(this);
         }
 
         public static void doPlayerStep() {
             foreach (Player player in players) {
                 // TODO
-            }
-        }
+                if (player.character != null) {
+                    if ((player.character.keyState & 16) != 0) player.character.Weapon.Primary();
+                    if ((player.character.keyState & 8) != 0) player.character.Weapon.Secondary();
 
-        ~Player() {
-            LogHelper.Log("Player " + name + " has left.", LogLevel.info);
+                    player.character.y += player.character.vspeed / 2;
+                    if (player.character.y > 300) player.character.y = 0;
+                }
+            }
         }
 
         public Socket Socket {
@@ -161,7 +191,7 @@ namespace GG2server.objects {
             set {
                 if (this.team != value) {
                     team = value;
-                    killCharacter();
+                    KillCharacter();
 
                     var buffer = GG2server.Server.Sendbuffer;
                     buffer.Add(Constants.PLAYER_CHANGETEAM);
@@ -178,7 +208,7 @@ namespace GG2server.objects {
             set {
                 if (this.player_class != value) {
                     player_class = value;
-                    killCharacter();
+                    KillCharacter();
 
                     var buffer = GG2server.Server.Sendbuffer;
                     buffer.Add(Constants.PLAYER_CHANGECLASS);
