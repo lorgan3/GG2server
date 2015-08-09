@@ -56,7 +56,11 @@ namespace GG2server.logic {
         }
 
         private void RickRoll(Object source, ElapsedEventArgs e) {
-            ServerMessage(GG2server.Message, sendbuffer);
+            string msg = GG2server.Message;
+            if (msg != null) {
+                LogHelper.Log(msg, LogLevel.info);
+                ServerMessage(msg, sendbuffer);
+            }
         }
 
         /// <summary>
@@ -237,7 +241,7 @@ namespace GG2server.logic {
 
                     ticks++;
                     int delay = (int)(stopwatch.ElapsedMilliseconds - time);
-                    if (delay >= 16) LogHelper.Log("Can't keep up! (" + delay + "ms)", LogLevel.warning);
+                    //if (delay >= 16) LogHelper.Log("Can't keep up! (" + delay + "ms)", LogLevel.warning);
                     Thread.Sleep(Math.Max(0, 16 - delay));
                 }
             } catch(ThreadAbortException) {

@@ -54,6 +54,7 @@ namespace GG2server {
             Console.ReadKey(true);
             serverThread.Abort();   // Stop the server
             LogHelper.SaveLogs("logs.txt", false);
+            Console.ReadKey(true);
         }
 
         public static Server Server {
@@ -70,6 +71,10 @@ namespace GG2server {
 
         public static string Message {
             get {
+                if (messages == null) {
+                    return null;
+                }
+
                 if (messages.MoveNext()) return messages.Current;
                 messages.Reset();
                 messages.MoveNext();

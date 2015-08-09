@@ -15,8 +15,11 @@ namespace GG2server.logic {
         /// <param name="level">The importance of the message.</param>
         public static void Log(string message, LogLevel level) {
             if (level >= displayLevel) {
+                Log2Color(level);
                 message = String.Format("[{0}] {1}: {2}", DateTime.Now.ToShortTimeString(), level, message);
                 Console.WriteLine(message);
+                Console.ResetColor();
+
                 logs.Add(message);
             }
         }
@@ -43,6 +46,30 @@ namespace GG2server.logic {
             int amount = logs.Count;
             logs.Clear();
             return amount;
+        }
+
+        /// <summary>
+        /// Sets the console color based on the loglevel.
+        /// </summary>
+        /// <param name="level">The loglevel.</param>
+        public static void Log2Color(LogLevel level) {
+            switch(level) {
+                case LogLevel.debug:
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    break;
+                case LogLevel.error:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    break;
+                case LogLevel.title:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    break;
+                case LogLevel.warning:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    break;
+                default:
+                    // White by default
+                    break;
+            }
         }
 
         /// <summary>

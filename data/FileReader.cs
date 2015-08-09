@@ -22,6 +22,9 @@ namespace GG2server.data {
         }
 
         public IEnumerator<string> GetEnumerator() {
+            if (lines.Count == 0) {
+                return null;
+            }
             return new LineEnumerator(lines);
         }
 

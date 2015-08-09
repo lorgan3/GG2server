@@ -11,7 +11,7 @@ namespace GG2server.objects {
         
         private string name;
         private Team team = Team.spectator;
-        private Class player_class;
+        private Class player_class = Class.scout;
         private Character character;
         private Dictionary<byte, byte> stats;
 
@@ -113,7 +113,7 @@ namespace GG2server.objects {
                 character = null;
                 Respawn(GG2server.respawnTime);
             } else {
-                Respawn(0);
+                Respawn(100);
             }
         }
 
@@ -144,6 +144,8 @@ namespace GG2server.objects {
 
             character = null;
             players.Remove(this);
+
+            LogHelper.Log("Player " + name + " has left the game", LogLevel.info);
         }
 
         public static void doPlayerStep() {
