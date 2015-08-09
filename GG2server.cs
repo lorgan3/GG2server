@@ -15,8 +15,6 @@ namespace GG2server {
         private static Config config;
         private static IEnumerator<string> messages;
 
-        public static Random random = new Random();
-
         // TODO make getters for these when I'm less lazy.
         public static byte capLimit;
         public static byte respawnTime;

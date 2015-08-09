@@ -24,7 +24,7 @@ namespace GG2server.objects.projectiles {
         }
 
         public static Shot Create(Player owner, float x, float y, float speed, float direction, int speedVariance, int directionVariance) {
-            return Create(owner, x, y, speed - speedVariance / 2 + (int)(GG2server.random.NextDouble() * speedVariance), direction - directionVariance / 2 + (int)(GG2server.random.NextDouble() * directionVariance));
+            return Create(owner, x, y, speed - speedVariance / 2 + (int)(GG2server.Server.random.NextDouble() * speedVariance), direction - directionVariance / 2 + (int)(GG2server.Server.random.NextDouble() * directionVariance));
         }
 
          ~Shot() {

@@ -13,6 +13,10 @@ namespace GG2server.logic {
         /// <param name="obj">An object</param>
         /// <returns></returns>
         public static String ToString(object obj) {
+            if (obj == null) {
+                return "";
+            }
+
             if (obj.GetType().IsArray) {
                 return String.Format("[{0}]", String.Join(", ", ((IEnumerable)obj).Cast<object>().Select(x => x.ToString()).ToArray()));
             } else {

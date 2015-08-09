@@ -24,6 +24,9 @@ namespace GG2server.logic {
         public Random random;
 
         public Server() {
+            // TODO remove this later.
+            Map map = MapReader.LoadMap("koth_harvest");
+
             this.random = new Random();
             this.stopwatch = new Stopwatch();
             sendbuffer = new List<byte>();

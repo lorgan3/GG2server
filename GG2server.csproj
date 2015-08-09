@@ -55,9 +55,10 @@
     <Compile Include="logic\data\Exceptions.cs" />
     <Compile Include="logic\data\Extensions.cs" />
     <Compile Include="logic\data\KeyValue.cs" />
+    <Compile Include="logic\data\Map.cs" />
     <Compile Include="logic\GeneralHelper.cs" />
     <Compile Include="logic\LogHelper.cs" />
-    <Compile Include="logic\MapHelper.cs" />
+    <Compile Include="data\MapReader.cs" />
     <Compile Include="logic\NetworkHelper.cs" />
     <Compile Include="logic\Server.cs" />
     <Compile Include="GG2server.cs" />
