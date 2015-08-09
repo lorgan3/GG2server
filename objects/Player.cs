@@ -20,6 +20,9 @@ namespace GG2server.objects {
         public ushort commandReceiveExpectedBytes;
         public byte commandReceiveCommand;
 
+        // Serverplugin vars
+        public bool hasChat;
+
         public Player(Socket socket, string name) {
             this.socket = socket;
             socket.Blocking = false;

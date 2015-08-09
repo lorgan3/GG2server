@@ -101,10 +101,11 @@ namespace GG2server.objects {
                                 b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.CurrentMap));
                                 b2.Add((byte)GG2server.Server.MapMD5.Length);
                                 b2.AddRange(NetworkHelper.GetBytes(GG2server.Server.MapMD5));
-                                
+
                                 // Server sent plugins
-                                b2.Add(0);
-                                b2.Add(0);
+                                b2.Add(GG2server.pluginsRequired ? (byte)1 : (byte)0);
+                                b2.Add((byte)GG2server.pluginList.Length);
+                                b2.AddRange(NetworkHelper.GetBytes(GG2server.pluginList));
                                 
                                 state = STATE_EXPECT_COMMAND;
                                 expectedBytes = 1;

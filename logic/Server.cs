@@ -196,8 +196,10 @@ namespace GG2server.logic {
                                                 // TODO
                                                 break;
                                             case Constants.PLUGIN_PACKET:
-                                                LogHelper.Log("Received a pluginpacket.", LogLevel.warning);
-                                                break;
+                                                byte packetId = socket.Read_ubyte();
+                                                byte[] buffer = socket.Read(player.commandReceiveExpectedBytes - 1);
+                                                ServerPlugin.ReceivePluginPacket(packetId, player, buffer);
+                                            break;
                                             case Constants.CLIENT_SETTINGS:
                                                 socket.Read_ubyte();
                                                 // TODO

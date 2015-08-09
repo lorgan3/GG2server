@@ -1,4 +1,5 @@
 ﻿
+using GG2server.objects.projectiles;
 using System;
 using System.Threading.Tasks;
 namespace GG2server.objects.weapons {
@@ -12,15 +13,12 @@ namespace GG2server.objects.weapons {
             reloadBuffer = 20 * 1000 / 30;
         }
 
-        public async override void Reload(int timeout) {
-            try {
-                cts = new System.Threading.CancellationTokenSource();
-                await Task.Delay(timeout, cts.Token);
-                cts = null;
+        public override void FireEvent(ushort seed) {
+            base.FireEvent(seed);
 
-                if (ammoCount < maxAmmo) ammoCount += 1;
-                if (ammoCount < maxAmmo) Reload(reloadTime);
-            } catch (Exception) { };
+            for(int i = 0; i < 6; i++) {
+                Shot.Create(owner.Player, owner.x, owner.y, 13, owner.aimdirection, 4, 15);
+            }
         }
     }
 }

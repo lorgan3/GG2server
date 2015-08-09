@@ -10,9 +10,9 @@ namespace GG2server.objects.weapons {
             lobbed = 0;
             ammoCount = 8;
             maxAmmo = ammoCount;
-            reloadTime = 15 / 30 * 1000;
-            refireTime = 26 / 30 * 1000;
-            reloadBuffer = 26 / 30 * 1000;
+            reloadTime = 1000 * 15 / 30;
+            refireTime = 1000 * 26 / 30;
+            reloadBuffer = 1000 * 26 / 30;
         }
 
         public new void Serialize(UpdateType type, List<byte> buffer) {

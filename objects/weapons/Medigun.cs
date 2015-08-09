@@ -12,9 +12,9 @@ namespace GG2server.objects.weapons {
             : base(owner) {
             ammoCount = 40;
             maxAmmo = ammoCount;
-            reloadTime = 3 / 30 * 1000;
-            refireTime = 55 / 30 * 1000;
-            reloadBuffer = 0 / 30 * 1000;
+            reloadTime = 1000 * 3 / 30;
+            refireTime = 1000 * 55 / 30;
+            reloadBuffer = 1000 * 0 / 30;
 
             healTarget = 255;
             uberCharge = 0;

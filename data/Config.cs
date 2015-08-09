@@ -27,9 +27,13 @@ namespace GG2server.data {
             List<KeyValue> list = (List<KeyValue>)this.config.Find(kv => kv.Key == section).Value;
             if (list != null) {
                 object obj = list.Find(kv => kv.Key == key).Value;
+
+
+                LogHelper.Log(String.Format("\tRead {0}:{1} from config: '{2}'", section, key, GeneralHelper.ToString(obj)), LogLevel.debug);
                 if (obj != null) return obj;
             }
 
+            LogHelper.Log(String.Format("\tRead {0}:{1} from config: '{2}'", section, key, GeneralHelper.ToString(def)), LogLevel.debug);
             WriteConfig(section, key, def);
             return def;
         }

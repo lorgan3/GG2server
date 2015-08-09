@@ -15,6 +15,8 @@ namespace GG2server {
         private static Config config;
         private static IEnumerator<string> messages;
 
+        public static Random random = new Random();
+
         // TODO make getters for these when I'm less lazy.
         public static byte capLimit;
         public static byte respawnTime;
@@ -24,6 +26,8 @@ namespace GG2server {
         public static bool announce;
         public static string password;
         public static string[] maps;
+        public static string pluginList;
+        public static bool pluginsRequired;
 
         static void Main(string[] args) {
             config = Config.ConfigFactory();
@@ -39,6 +43,11 @@ namespace GG2server {
             maps = new string[1];
             maps[0] = "ctf_truefort";
             maps = (string[])config.ReadConfig("server", "maps", maps);
+            pluginList = (string)config.ReadConfig("server", "pluginList", ServerPlugin.GetRealName(AvailablePlugins.chat_v2));
+            pluginsRequired = (bool)config.ReadConfig("server", "pluginsRequired", false);
+
+            // Start server sent plugins.
+            ServerPlugin.parsePlugins(pluginList);
 
             // Read troll messages
             messages = new FileReader("messages.txt").GetEnumerator();

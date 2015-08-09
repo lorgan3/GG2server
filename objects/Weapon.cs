@@ -24,20 +24,23 @@ namespace GG2server.objects {
             Refire(refireTime);
         }
 
-        public virtual async void Refire(int timeout) {
+        public async virtual void Refire(int timeout) {
             await Task.Delay(timeout);
             readyToShoot = 1;
         }
 
-        public virtual async void Reload(int timeout) {
+        public async virtual void Reload(int timeout) {
             try {
                 cts = new System.Threading.CancellationTokenSource();
                 await Task.Delay(timeout, cts.Token);
                 cts = null;
+
+                if (ammoCount < maxAmmo) ammoCount += 1;
+                if (ammoCount < maxAmmo) Reload(reloadTime);
             } catch (Exception) { };
         }
 
-        public void Primary() {
+        public virtual void Primary() {
             if (readyToShoot == 1 && ammoCount > 0) {
                 if (cts != null) cts.Cancel();  // Stop reloading
                 ammoCount -= 1;
@@ -48,10 +51,10 @@ namespace GG2server.objects {
             }
         }
 
-        public void Secondary() {
+        public virtual void Secondary() {
         }
 
-        public void FireEvent(ushort seed) {
+        public virtual void FireEvent(ushort seed) {
             var buffer = GG2server.Server.Sendbuffer;
             buffer.Add(Constants.WEAPON_FIRE);
             buffer.Add((byte)Player.Players.IndexOf(owner.Player));
