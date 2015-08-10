@@ -12,4 +12,10 @@ namespace GG2server.logic.data {
         public MapException(string message) : base(message) { }
         public MapException(string message, Exception inner) : base(message, inner) { }
     }
+
+    class GGonException : Exception {
+        public GGonException() { }
+        public GGonException(string message) : base(message) { }
+        public GGonException(string message, Exception inner) : base(message, inner) { }
+    }
 }

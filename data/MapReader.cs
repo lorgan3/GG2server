@@ -1,4 +1,5 @@
-﻿using GG2server.logic.data;
+﻿using GG2server.data;
+using GG2server.logic.data;
 using Ionic.Zlib;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace GG2server.logic {
 
         private static Map Generate(string name) {
             string md5;
-            Dictionary<string, Dictionary<string, string>> entities;
+            Dictionary<string, object> entities;
             bool[,] walkmask;
 
             byte[] buffer;
@@ -59,18 +60,40 @@ namespace GG2server.logic {
             int start = result.IndexOf(ENTITIES) + ENTITIES.Length;
             entities = parseEntities(result.Substring(start, result.IndexOf(ENDENTITIES) - start));
             start = result.IndexOf(WALKMASK) + WALKMASK.Length;
-            walkmask = parseWalkmask(result.Substring(start, result.IndexOf(ENDWALKMASK) - start));
+            walkmask = parseWalkmask(result.Substring(start + 1, result.IndexOf(ENDWALKMASK) - start - 1));
 
             return new Map(md5, entities, walkmask);
         }
 
         private static bool[,] parseWalkmask(string walkmask) {
-            return null;
+            string[] parts = walkmask.Split((char)10);
+            int width = Int32.Parse(parts[0]);
+            int height = Int32.Parse(parts[1]);
+            bool[,] mask = new bool[width, height];
+            walkmask = parts[2];
+
+            int index = 0;
+            byte curByte = (byte)(walkmask[index] - 32);
+            int byte_fill = 0;
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    mask[j, i] = (curByte & (byte)1) == 1;
+
+                    curByte >>= 1;
+                    byte_fill++;
+                    if (byte_fill == 6) {
+                        byte_fill = 0;
+                        index++;
+                        curByte = (byte)(walkmask[index] - 32);
+                    }
+                }
+            }
+
+            return mask;
         }
 
-        private static Dictionary<string, Dictionary<string, string>> parseEntities(string leveldata) {
-            LogHelper.Log(leveldata, LogLevel.info);
-            return null;
+        private static Dictionary<string, object> parseEntities(string leveldata) {
+            return GaygonParser.Decode(leveldata);
         }
 
         private static Map Deserialize(string name) {

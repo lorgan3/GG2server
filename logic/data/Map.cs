@@ -8,10 +8,10 @@ namespace GG2server.logic.data {
     [Serializable]
     public struct Map {
         private string md5;
-        private Dictionary<string, Dictionary<string, string>> entities;
+        private Dictionary<string, object> entities;
         private bool[,] walkmask;
 
-        public Map(String md5, Dictionary<string, Dictionary<string, string>> entities, bool[,] walkmask) {
+        public Map(String md5, Dictionary<string, object> entities, bool[,] walkmask) {
             this.md5 = md5;
             this.entities = entities;
             this.walkmask = walkmask;
@@ -23,7 +23,7 @@ namespace GG2server.logic.data {
             }
         }
 
-        public Dictionary<string, Dictionary<string, string>> Entities {
+        public Dictionary<string, object> Entities {
             get {
                 return this.entities;
             }
