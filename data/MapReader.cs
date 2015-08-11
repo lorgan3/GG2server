@@ -31,9 +31,6 @@ namespace GG2server.logic {
 
         private static Map Generate(string name) {
             string md5;
-            Dictionary<string, object> entities;
-            bool[,] walkmask;
-
             byte[] buffer;
             using (FileStream fs = new FileStream(name + ".png", FileMode.Open, FileAccess.Read)) {
                 md5 = ComputeMD5(fs);
@@ -56,40 +53,13 @@ namespace GG2server.logic {
                 output.Close();
             }
 
-            String result = NetworkHelper.GetString(buffer);
+            string result = NetworkHelper.GetString(buffer);
             int start = result.IndexOf(ENTITIES) + ENTITIES.Length;
-            entities = parseEntities(result.Substring(start, result.IndexOf(ENDENTITIES) - start));
+            string leveldata = result.Substring(start, result.IndexOf(ENDENTITIES) - start);
             start = result.IndexOf(WALKMASK) + WALKMASK.Length;
-            walkmask = parseWalkmask(result.Substring(start + 1, result.IndexOf(ENDWALKMASK) - start - 1));
+            string[] walkmask = result.Substring(start + 1, result.IndexOf(ENDWALKMASK) - start - 1).Split((char)10);
 
-            return new Map(md5, entities, walkmask);
-        }
-
-        private static bool[,] parseWalkmask(string walkmask) {
-            string[] parts = walkmask.Split((char)10);
-            int width = Int32.Parse(parts[0]);
-            int height = Int32.Parse(parts[1]);
-            bool[,] mask = new bool[width, height];
-            walkmask = parts[2];
-
-            int index = 0;
-            byte curByte = (byte)(walkmask[index] - 32);
-            int byte_fill = 0;
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    mask[j, i] = (curByte & (byte)1) == 1;
-
-                    curByte >>= 1;
-                    byte_fill++;
-                    if (byte_fill == 6) {
-                        byte_fill = 0;
-                        index++;
-                        curByte = (byte)(walkmask[index] - 32);
-                    }
-                }
-            }
-
-            return mask;
+            return new Map(md5, GaygonParser.Decode(leveldata), Int32.Parse(walkmask[0]), Int32.Parse(walkmask[1]), walkmask[2]);
         }
 
         private static Dictionary<string, object> parseEntities(string leveldata) {

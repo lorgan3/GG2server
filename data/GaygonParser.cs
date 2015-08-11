@@ -153,7 +153,7 @@ namespace GG2server.data {
                     token = tokens.Peek();
                     if (token == "]") { // Empty list
                         tokens.Dequeue();
-                        map.Add("Length", 0);
+                        map.Add("length", 0);
                         return map;
 
                     } else {
@@ -170,7 +170,7 @@ namespace GG2server.data {
                             if (token == ",")
                                 continue;
                             else if (token == "]") {
-                                map.Add("Length", len);
+                                map.Add("length", len);
                                 return map;
                             } else
                                 throw new GGonException("Error when parsing GGON: unexpected token \"" + token + "\" after value");
