@@ -66,6 +66,10 @@
     <Compile Include="logic\ServerPlugin.cs" />
     <Compile Include="logic\serverPlugins\Chat_v2.cs" />
     <Compile Include="objects\Character.cs" />
+    <Compile Include="objects\Hitbox.cs" />
+    <Compile Include="objects\Hitboxes\Point.cs" />
+    <Compile Include="objects\Hitboxes\Circle.cs" />
+    <Compile Include="objects\Hitboxes\Rectangle.cs" />
     <Compile Include="objects\IEntity.cs" />
     <Compile Include="objects\JoiningPlayer.cs" />
     <Compile Include="objects\Player.cs" />
