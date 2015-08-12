@@ -23,7 +23,7 @@ namespace GG2server.objects {
         /// <param name="other">Rectangle 2.</param>
         /// <returns>True if they collide.</returns>
         public static bool Collide(Rectangle self, Rectangle other) {
-            return (self.x1 <= other.x2 && self.x2 >= other.x1) && (self.y1 <= other.y2 && self.y2 >= other.y1);
+            return !(self.x1 > other.x2 || self.x2 < other.x1 || self.y1 > other.y2 || self.y2 < other.y1);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace GG2server.objects {
         /// <param name="other">Circle 2.</param>
         /// <returns>True if they collide.</returns>
         public static bool Collide(Circle self, Circle other) {
-            return Math.Sqrt((self.x1 - other.x1) * (self.x1 - other.x1) + (self.y1 - other.y1) * (self.y1 - other.y1)) <= (self.radius + other.radius) / 2;
+            return Math.Sqrt((self.x1 - other.x1) * (self.x1 - other.x1) + (self.y1 - other.y1) * (self.y1 - other.y1)) < (self.radius + other.radius);
         }
 
         /// <summary>
