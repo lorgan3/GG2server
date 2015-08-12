@@ -37,6 +37,16 @@ namespace GG2serverTests {
         }
 
         [TestMethod]
+        public void CollidingLinesTest() {
+            Line line1 = new Line(20, 20, 60, 60);
+            Line line2 = new Line(10, 10, 30, 30);
+            Line line3 = new Line(80, 80, 100, 100);
+
+            Assert.IsTrue(Hitbox.Collide(line1, line2), "Lines should collide.");
+            Assert.IsFalse(Hitbox.Collide(line1, line3), "Lines shouldn't collide.");
+        }
+
+        [TestMethod]
         public void CollidingRectangleCircleTest() {
             Rectangle rect1 = new Rectangle(20, 20, 60, 60);
             Circle circle1 = new Circle(30, 30, 8);

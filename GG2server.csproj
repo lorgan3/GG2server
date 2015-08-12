@@ -69,6 +69,7 @@
     <Compile Include="objects\Hitbox.cs" />
     <Compile Include="objects\Hitboxes\Point.cs" />
     <Compile Include="objects\Hitboxes\Circle.cs" />
+    <Compile Include="objects\Hitboxes\Line.cs" />
     <Compile Include="objects\Hitboxes\Rectangle.cs" />
     <Compile Include="objects\IEntity.cs" />
     <Compile Include="objects\JoiningPlayer.cs" />

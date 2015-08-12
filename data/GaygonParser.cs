@@ -187,7 +187,7 @@ namespace GG2server.data {
 
             try {
                 return (Dictionary<string, object>)Parse(tokens);
-            } catch (InvalidCastException ce) {
+            } catch (InvalidCastException) {
                 throw new GGonException("Supplied ggon was not a valid map or list.");
             }
         }

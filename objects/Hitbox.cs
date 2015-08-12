@@ -47,6 +47,16 @@ namespace GG2server.objects {
         }
 
         /// <summary>
+        /// Check if 2 lines collide.
+        /// </summary>
+        /// <param name="self">Line 1.</param>
+        /// <param name="other">Line 2.</param>
+        /// <returns></returns>
+        public static bool Collide(Line self, Line other) {
+            return Line.DoLinesIntersect(self, other);
+        }
+
+        /// <summary>
         /// Check if a rectangle and a circle collide.
         /// </summary>
         /// <param name="self">Rectangle.</param>
@@ -76,6 +86,17 @@ namespace GG2server.objects {
         }
 
         /// <summary>
+        /// Checks if a rectangle and a line collide.
+        /// </summary>
+        /// <param name="self">Rectangle.</param>
+        /// <param name="other">Line.</param>
+        /// <returns>True if they collide.</returns>
+        public static bool Collide(Rectangle self, Line other) {
+            // TODO
+            return false;
+        }
+
+        /// <summary>
         /// Check if a circle and a point collide.
         /// </summary>
         /// <param name="self">Circle.</param>
@@ -83,6 +104,28 @@ namespace GG2server.objects {
         /// <returns>True if they collide.</returns>
         public static bool Collide(Circle self, Point other) {
             return Math.Sqrt((self.x1 - other.x1) * (self.x1 - other.x1) + (self.y1 - other.y1) * (self.y1 - other.y1)) <= self.radius;
+        }
+
+        /// <summary>
+        /// Checks if a cricle and a line collide.
+        /// </summary>
+        /// <param name="self">Cirle.</param>
+        /// <param name="other">Line.</param>
+        /// <returns>True if they collide.</returns>
+        public static bool Collide(Circle self, Line other) {
+            // TODO
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a point and a line collide.
+        /// </summary>
+        /// <param name="self">Point.</param>
+        /// <param name="other">Line.</param>
+        /// <returns>True if they collide.</returns>
+        public static bool Collide(Point self, Line other) {
+            // TODO
+            return false;
         }
     }
 }

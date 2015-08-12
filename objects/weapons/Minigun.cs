@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 
 namespace GG2server.objects.weapons {
     class Minigun : Weapon {
-        private readonly Task Task;
-
         public Minigun(Character owner)
             : base(owner) {
             ammoCount = 200;
