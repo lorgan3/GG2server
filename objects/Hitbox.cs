@@ -12,7 +12,16 @@ namespace GG2server.objects {
         /// <param name="direction">The direction that should be checked.</param>
         /// <returns></returns>
         public static bool Collide(Rectangle self, Directions direction) {
-            // TODO
+            switch(direction) {
+                case Directions.down:
+                    bool[,] result = GG2server.Server.Map.GetRange(self);
+                    for(int i = 0; i < result.Length; i++) {
+                        if (result[i, result.GetLength(1)-1]) {
+                            return true;
+                        }
+                    }
+                break;
+            }
             return false;
         }
 

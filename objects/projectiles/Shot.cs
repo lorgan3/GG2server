@@ -28,7 +28,7 @@ namespace GG2server.objects.projectiles {
         }
 
          ~Shot() {
-            LogHelper.Log("rip", LogLevel.Debug);
+            LogHelper.Log("rip", LogLevel.debug);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using GG2server.logic;
 using GG2server.logic.data;
+using GG2server.objects.Hitboxes;
 using GG2server.objects.weapons;
 //using Physics2DDotNet;
 //using Physics2DDotNet.Shapes;
@@ -18,6 +19,8 @@ namespace GG2server.objects {
         private float maxHP;
         private Player player;
         private Weapon weapon;
+        private Rectangle hitbox;
+        private Point anchor;
 
         public float vspeed;
         public float hspeed;
@@ -37,6 +40,9 @@ namespace GG2server.objects {
             this.player = player;
             vspeed = 10f;
             hspeed = 0f;
+
+            hitbox = new Rectangle(0, 0, 12, 33);
+            anchor = new Point(6, 10);
 
             switch (player.Class) {
                 case Class.scout:
@@ -189,6 +195,18 @@ namespace GG2server.objects {
         public Weapon Weapon {
             get {
                 return this.weapon;
+            }
+        }
+
+        public Rectangle Hitbox {
+            get {
+                return this.hitbox;
+            }
+        }
+
+        public Point Anchor {
+            get {
+                return this.anchor;
             }
         }
     }

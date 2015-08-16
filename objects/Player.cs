@@ -155,11 +155,19 @@ namespace GG2server.objects {
             foreach (Player player in players) {
                 // TODO
                 if (player.character != null) {
-                    if ((player.character.keyState & 16) != 0) player.character.Weapon.Primary();
-                    if ((player.character.keyState & 8) != 0) player.character.Weapon.Secondary();
+                    Character c = player.character;
 
-                    player.character.y += player.character.vspeed / 2;
-                    if (player.character.y > 300) player.character.y = 0;
+                    if ((c.keyState & 16) != 0) player.character.Weapon.Primary();
+                    if ((c.keyState & 8) != 0) player.character.Weapon.Secondary();
+
+                    c.Hitbox.move(c.x + c.Anchor.x1, c.y + c.Anchor.y1);
+                    LogHelper.Log(string.Format("x1: {0}, y1: {1}, x2: {2}, y2: {3}", c.Hitbox.x1, c.Hitbox.y1, c.Hitbox.x2, c.Hitbox.y2), LogLevel.debug);
+                    if (Hitbox.Collide(c.Hitbox, Directions.down)) {
+                        LogHelper.Log("collide", LogLevel.debug);
+                    } else {
+                        c.y += c.vspeed;
+                        if (c.y > 300) c.y = 0;
+                    }
                 }
             }
         }

@@ -20,19 +20,18 @@ namespace GG2server.logic {
         private string mapMD5;
         private Stopwatch stopwatch;
         private List<byte> sendbuffer;
+        private Map map;
 
         public Random random;
 
         public Server() {
-            // TODO remove this later.
-            Map map = MapReader.LoadMap("koth_harvest");
-
             this.random = new Random();
             this.stopwatch = new Stopwatch();
             sendbuffer = new List<byte>();
             if (GG2server.announce) NetworkHelper.RegisterServerport(GG2server.port);
 
             currentMap = GG2server.maps[0];
+            map = MapReader.LoadMap(currentMap);
 
             id = new byte[16];
             for (byte i = 0; i < 16; i++) {
@@ -218,12 +217,10 @@ namespace GG2server.logic {
                     // Do stuff
                     Player.doPlayerStep();
 
-                    if (ticks % 2 == 0) {
-                        if (ticks % 14 == 0) {
-                            ticks = 0;
-                              Serialize(UpdateType.quick, sendbuffer);
-                        } else Serialize(UpdateType.inputstate, sendbuffer);
-                    }
+                    if (ticks % 7 == 0) {
+                        ticks = 0;
+                            Serialize(UpdateType.quick, sendbuffer);
+                    } else Serialize(UpdateType.inputstate, sendbuffer);
 
                     // Send data
                     if (sendbuffer.Count > 0) {
@@ -246,8 +243,8 @@ namespace GG2server.logic {
 
                     ticks++;
                     int delay = (int)(stopwatch.ElapsedMilliseconds - time);
-                    //if (delay >= 16) LogHelper.Log("Can't keep up! (" + delay + "ms)", LogLevel.warning);
-                    Thread.Sleep(Math.Max(0, 16 - delay));
+                    //if (delay >= 33) LogHelper.Log("Can't keep up! (" + delay + "ms)", LogLevel.warning);
+                    Thread.Sleep(Math.Max(0, 33 - delay));
                 }
             } catch(ThreadAbortException) {
                 LogHelper.Log("Server is shutting down", LogLevel.title);
@@ -381,6 +378,12 @@ namespace GG2server.logic {
         public List<byte> Sendbuffer {
             get {
                 return this.sendbuffer;
+            }
+        }
+
+        public Map Map {
+            get {
+                return this.map;
             }
         }
     }

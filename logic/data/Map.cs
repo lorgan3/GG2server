@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GG2server.objects.Hitboxes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,6 +48,27 @@ namespace GG2server.logic.data {
             }
 
             return mask;
+        }
+
+        /// <summary>
+        /// Returns the walkmask inside rect.
+        /// </summary>
+        /// <param name="rect">The rect.</param>
+        /// <returns>A part of the walkmask</returns>
+        public bool[,] GetRange(Rectangle rect) {
+            int x1 = (int)rect.x1;
+            int y1 = (int)rect.y1;
+            int x2 = (int)Math.Ceiling(rect.x2);
+            int y2 = (int)Math.Ceiling(rect.y2);
+
+            bool[,] result = new bool[x2 - x1, y2 - y1];
+            for(int i = 0; i < (x2 - x1); i++) {
+                for (int j = 0; j < (y2 - y1); j++) {
+                    result[i, j] = this.walkmask[i, j];
+                }
+            }
+
+            return result;
         }
 
         public string Md5 {
